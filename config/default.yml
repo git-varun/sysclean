@@ -1,0 +1,39 @@
+risk_mode: balanced
+
+dry_run: true
+
+parallelism:
+  enabled: true
+  max_workers: 4
+
+logging:
+  enabled: true
+  retention_days: 30
+
+reports:
+  markdown: true
+  json: true
+  html: true
+
+cleanup:
+  apt:
+    enabled: true
+
+  snap:
+    enabled: true
+
+  docker:
+    enabled: true
+
+  caches:
+    enabled: true
+
+protected_paths:
+  - ~/.ssh
+  - ~/.gnupg
+  - ~/.kube
+  - ~/.aws
+
+secrets:
+  detect_env_files: true
+  detect_wallets: true

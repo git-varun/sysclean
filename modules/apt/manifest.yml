@@ -1,0 +1,15 @@
+name: apt-cleaner
+version: 1.0.0
+description: APT cleanup module
+
+risk_level: medium
+
+capabilities:
+  - filesystem
+  - apt
+  - package-management
+
+dependencies:
+  - apt
+
+entrypoint: module.sh

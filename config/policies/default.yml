@@ -1,0 +1,12 @@
+rules:
+  - when:
+      metric: docker_unused_gb
+      greater_than: 20
+    then:
+      action: recommend_docker_cleanup
+
+  - when:
+      metric: cache_growth_gb
+      greater_than: 10
+    then:
+      action: recommend_cache_cleanup

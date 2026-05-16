@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "risk_level",
+    "entrypoint"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "risk_level": {
+      "type": "string",
+      "enum": [
+        "safe",
+        "medium",
+        "aggressive"
+      ]
+    },
+    "entrypoint": {
+      "type": "string"
+    }
+  }
+}
