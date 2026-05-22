@@ -1,8 +1,10 @@
+<!-- DOCUMENT HEADER -->
 # Product Requirements Document (PRD): SysClean
 
 ## 1. Executive Summary
 SysClean is a modular, AI-assisted workstation operations platform designed to maintain, optimize, and secure developer environments. Originally a cleanup utility, it is evolving into an autonomous remediation and predictive maintenance system for Ubuntu-first developer workstations.
 
+<!-- CORE VISION -->
 ## 2. Product Vision & Objectives
 ### 2.1 Vision
 To become the AI-native operating layer for developer infrastructure, providing autonomous, self-healing, and predictive maintenance capabilities.
@@ -18,6 +20,8 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **DevOps/SRE Teams:** Standardizing workstation health and compliance across fleets.
 - **AI/ML Engineers:** Managing heavy local resources (Docker, GPU drivers, large datasets).
 
+<!-- DETAILED REQUIREMENTS -->
+<!-- Add new functional requirements here as the project evolves -->
 ## 4. Functional Requirements
 
 ### 4.1 Core Runtime & Orchestration
@@ -51,6 +55,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **TUI (Textual):** Interactive dashboard for real-time monitoring and health visualization.
 - **Web UI (FastAPI):** Remote management and rich data visualization (Plotly).
 
+<!-- SYSTEM METRICS & NFRs -->
 ## 5. Non-Functional Requirements
 
 ### 5.1 Reliability
@@ -71,6 +76,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **AI:** Ollama (Local), Sentence-Transformers, NetworkX (Graph).
 - **Web/UI:** FastAPI, Textual, Rich, Plotly.
 
+<!-- TIMELINE & PLANNING -->
 ## 7. Roadmap & Milestones
 
 ### Phase 1: Foundation (Current Priority)
@@ -93,6 +99,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **Proactive Maintenance:** "As a DevOps engineer, I want to see a health score for my workstation to know when maintenance is required before it impacts my productivity."
 - **Privacy & Security:** "As a security-conscious user, I want to ensure my private keys and secrets are never touched by cleanup scripts and that all AI analysis happens locally."
 
+<!-- RISK MANAGEMENT -->
 ## 9. Risk & Mitigation
 | Risk | Impact | Mitigation Strategy |
 | :--- | :--- | :--- |

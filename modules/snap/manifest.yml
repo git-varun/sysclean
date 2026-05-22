@@ -1,5 +1,5 @@
-name: apt
+name: snap
 version: 1.0.0
-description: APT cleanup module
+description: Snap cleanup module
 risk_level: safe
 entrypoint: clean.py

@@ -1,0 +1,5 @@
+name: tempfiles
+version: 1.0.0
+description: Temporary files cleanup module
+risk_level: safe
+entrypoint: clean.py

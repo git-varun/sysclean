@@ -1,156 +1,478 @@
+# SysClean Core — Execution Plan
 
-  Phase 1: Zero-Trust Architecture & Security Remediation
-  What: Decouple the intelligence layer from the execution layer and remediate all Bandit/Pylint security findings. AI and web servers should never run as root.
-  How:
+## Goal
 
-   1. Implement a client-server architecture locally. sysclean-cli runs as the standard user, interacting with LLMs and building the execution plan. syscleand runs as root, listening on a restricted Unix Domain Socket to execute validated plans.
-   2. Refactor subprocess.run calls to use arrays (e.g., ["docker", "system", "prune"]) instead of shell=True to prevent command injection.
-   3. Configure Jinja2 in the HTML reporter with autoescape=True.
-   4. Add global timeout decorators to all requests calls to prevent hanging.
-  Impacted Files:
+Ship a stable, maintainable, rollback-safe workstation cleanup engine.
 
-- bin/sysclean (Refactor to client/daemon multiplexer)
-- python/executor/runtime.py, python/executor/worker.py (Remove shell=True, implement socket listener)
-- python/reporting/html.py (Fix Jinja2 XSS)
-- python/ai/providers/ollama.py, python/security/cve.py (Add HTTP timeouts)
-- lib/execution.sh (Harden IPC boundary)
-  Acceptance Criteria: Bandit reports 0 high/medium issues. Pylint score is > 8.0. The daemon can receive a command via socket and execute it without shell=True.
+Focus:
 
-  Phase 2: High-Concurrency State Management (SQLite WAL)
-  What: Build a thread-safe, transactional database layer that supports concurrent reads (UI/CLI) and writes (Background Daemon).
-  How:
+* deterministic execution,
+* safety,
+* operational correctness,
+* production readiness.
 
-   1. Delete the legacy JSON queue logic.
-   2. Initialize SQLite with PRAGMA journal_mode=WAL; and PRAGMA synchronous=NORMAL; for high concurrency.
-   3. Introduce alembic for database migrations. Create the initial schema: queue, telemetry_journal, rollback_registry, and state_locks.
-   4. Implement atomic queue state transitions (Proposed -> Approved -> Locked -> Executing -> Verified -> Completed/Failed) using explicit SQLite transactions and FOR UPDATE locks.
-  Impacted Files:
+Do not expand scope during implementation.
 
-- lib/queue.sh, queue.json (Deleted)
-- python/telemetry/db.py (Rewrite connection pool, enable WAL)
-- python/telemetry/queue.py (Rewrite to enforce atomic state transitions)
-- requirements.txt (Add alembic, sqlalchemy)
-- python/migrations/ (New directory for Alembic scripts)
-  Acceptance Criteria: 10 concurrent threads can write to the queue simultaneously without database is locked errors. The database schema is versioned.
+---
 
-  Phase 3: The Deterministic Execution Engine & Chaos Resilience
-  What: Build an execution runner that cannot fail silently and recovers perfectly from crashes (SIGKILL, power loss).
-  How:
+# Phase 0 — Architecture Reset (1–2 Days)
 
-   1. Isolate module execution using Linux namespaces (via bwrap or unshare in the bash runner) or strict cgroups to limit CPU/Memory/Filesystem access per plugin.
-   2. Register signal handlers in python/executor/runtime.py to catch SIGTERM/SIGINT. If interrupted, mark the active queue task as Failed (Interrupted).
-   3. Build a recovery routine on daemon boot that scans for tasks stuck in the Executing state and rolls them back before accepting new work.
-  Impacted Files:
+## Objective
 
-- python/executor/runtime.py (Signal handlers, cgroup wrapping)
-- lib/execution.sh (Namespace isolation)
-- python/automation/autonomous.py (Boot recovery routine)
-- tests/python/test_executor.py (New: Chaos testing simulating crashes)
-  Acceptance Criteria: A kill -9 on the executor process while processing a task results in the daemon automatically reverting the partial state upon restart.
+Remove speculative architecture permanently.
 
-  Phase 4: eBPF-Powered Rollback & Observability
-  What: Guarantee perfect restoration by tracing exactly what files the execution engine deletes or modifies.
-  How:
+## Tasks
 
-   1. Instead of relying on plugins to honestly report what they delete, use an inotify watcher (or BCC/eBPF via python) bound to the PID of the executing module.
-   2. Trace all unlink and rmdir syscalls.
-   3. Before the syscall completes (or immediately prior based on the plan), compress the target files into an AES-encrypted tarball.
-   4. Store the tarball path and hash in the SQLite rollback_registry tied to the transaction ID.
-   5. python/rollback/engine.py reads the registry, decrypts the tarball, and replaces the exact files.
-  Impacted Files:
+### Delete Directories
 
-- python/rollback/engine.py (Complete rewrite for tarball restoration)
-- python/telemetry/events.py (Syscall tracing integration)
-- runtime/state/rollbacks/ (New directory for encrypted tarballs)
-  Acceptance Criteria: Deleting a cache directory via SysClean, altering the system state, and then running sysclean rollback <id> restores the exact bytes deleted.
+Remove:
 
-  Phase 5: Deep Safety & Governance Guardrails
-  What: Prevent catastrophic user or AI errors (e.g., deleting /etc or ~/.ssh).
-  How:
+```text id="7sjav7"
+adaptive/
+agents/
+awareness/
+behavior/
+cognition/
+consensus/
+copilots/
+drift/
+embeddings/
+evolution/
+federation/
+forecasting/
+generation/
+governance/
+incidents/
+mesh/
+orchestration_ai/
+orchestration_rl/
+prediction/
+prevention/
+reinforcement/
+simulation/
+synthesis/
+trust/
+twin/
+twins/
+```
 
-   1. Enhance lib/guards.sh and python/protection/classifier.py to use strict regex, path canonicalization (to prevent ../../ attacks), and magic-byte checks.
-   2. Hardcode Risk Tiers: safe requires no interaction, balanced requires standard CLI confirmation, aggressive requires a special --force-aggressive flag and TTY presence.
-   3. Implement JSON schema validation for all plugins in modules/*/manifest.yml. Reject loading plugins missing capabilities or signatures.
-  Impacted Files:
+### Collapse Structure
 
-- lib/guards.sh (Canonicalization, deep traversal blocks)
-- python/protection/classifier.py (Magic byte detection)
-- python/evolution/governance.py (Risk tier enforcement)
-- config/plugin.schema.json (Strict validation)
-  Acceptance Criteria: The engine forcibly rejects a plugin attempting to delete ~/.ssh/id_rsa regardless of queue state or AI recommendation.
+Target:
 
-  Phase 6: Core Remediation Plugins (Plan & Execute)
-  What: Deliver the actual cleanup capabilities (APT, Snap, Docker, Caches).
-  How:
+```text id="xhhvg4"
+python/
+├── core/
+├── queue/
+├── plugins/
+├── security/
+├── ai/
+├── tui/
+└── web/
+```
 
-   1. Each bash module must support two flags: --plan and --execute.
-   2. --plan outputs strict JSON: {"targets": ["/var/cache/apt/..."], "reclaimable_bytes": 102400}.
-   3. --execute performs the action but ONLY on the targets output by the plan phase.
-   4. Implement developer cache targeting (npm, pip, yarn) by scanning user home directories securely.
-  Impacted Files:
+### Deliverables
 
-- modules/apt.sh, modules/docker.sh, modules/snap.sh (Implement logic)
-- modules/dev_caches.sh (New module)
-- lib/execution.sh (Enforce plan-before-execute lifecycle)
-  Acceptance Criteria: sysclean clean --dry-run accurately calculates reclaimable space without modifying the filesystem.
+* simplified repo,
+* dependency cleanup,
+* updated imports,
+* architecture baseline.
 
-  Phase 7: Semantic Infrastructure Graph & AI Reasoning
-  What: Give the system contextual awareness so the AI can make intelligent recommendations based on dependencies.
-  How:
+---
 
-   1. Use networkx to build a directed graph of resources (python/graph/resource_graph.py). Nodes = Packages, Containers, Caches. Edges = "depends_on", "used_by".
-   2. Feed graph sub-sections to the Ollama provider alongside the telemetry state. Prompt the LLM to output structured JSON recommendations ({"action": "clean", "target": "docker_images", "confidence": 0.9}).
-   3. The AI reasoning engine (python/ai_runtime/reasoner.py) pushes these as Proposed tasks to the queue.
-  Impacted Files:
+# Phase 1 — Secure Runtime Foundation (3–5 Days)
 
-- python/graph/resource_graph.py (Graph construction)
-- python/ai/providers/ollama.py (Prompt engineering, JSON schema enforcement)
-- python/ai_runtime/reasoner.py (AI to Queue bridge)
-  Acceptance Criteria: The AI proposes a cleanup of an orphaned Docker volume, but explicitly avoids a volume currently bound to a running container, based on graph analysis.
+## Objective
 
-  Phase 8: Autonomous Self-Healing Daemon
-  What: Transform SysClean from a manual tool into a proactive, predictive background operator.
-  How:
+Build a safe execution boundary.
 
-   1. Create a systemd service file for the SysClean daemon.
-   2. Implement an Entropy Watcher loop (python/automation/scheduler.py) that wakes up every N hours.
-   3. Use scikit-learn in python/forecasting/ml_forecast.py to run linear regression on the telemetry journal's storage metrics, predicting when the disk will hit 95%.
-   4. If predicted exhaustion is < 48 hours, the daemon automatically enqueues and executes safe-tier cleanup tasks.
-  Impacted Files:
+## Tasks
 
-- systemd/syscleand.service (New file)
-- python/automation/scheduler.py (Watcher loop)
-- python/forecasting/ml_forecast.py (Predictive models)
-- python/automation/autonomous.py (Trigger logic)
-  Acceptance Criteria: The system daemon autonomously clears system caches when disk space is forecasted to run out, generating an audit log without user intervention.
+### Daemon Separation
 
-  Phase 9: Enterprise Fleet Federation
-  What: Scale the system to allow central management of hundreds of workstations.
-  How:
+Implement:
 
-   1. Finalize the append-only JSONL event system (python/telemetry/journal.py). Ensure logs rotate at 10MB.
-   2. Build the Federation Gateway in python/federation/gateway.py using a secure, token-authenticated mTLS channel to aggregate metrics.
-   3. Expand the FastAPI server (python/web/server.py) to expose a Plotly-rendered dashboard showing the health distribution of the entire fleet.
-  Impacted Files:
+```text id="2kj10s"
+sysclean-cli  → user
+syscleand     → privileged daemon
+```
 
-- python/telemetry/journal.py (Log rotation, PII redaction)
-- python/federation/gateway.py (mTLS syncing)
-- python/web/server.py, python/web/fleet_ws.py (Fleet dashboard API)
-- python/web/templates/fleet.html (Plotly UI)
-  Acceptance Criteria: A central server successfully aggregates and displays real-time health scores and reclaimed bytes from at least 3 distinct SysClean instances.
+Communication:
 
-  Phase 10: Immutable Packaging, TUI & Polish
-  What: Deliver a seamless, zero-friction developer and user experience.
-  How:
+* Unix Domain Socket only.
 
-   1. Use PyInstaller or shiv to compile the entire Python environment and dependencies into a single static binary.
-   2. Build a .deb package containing the binary, bash modules, and systemd units for native Ubuntu installation.
-   3. Finalize python/tui/dashboard.py using textual to provide a real-time top-like interface for SysClean metrics, the queue, and current health score.
-   4. Complete all documentation.
-  Impacted Files:
+### Remove Dangerous Execution
 
-- Makefile or build.sh (Packaging logic)
-- debian/ (Debian packaging specs)
-- python/tui/dashboard.py (Finalize UI components)
-- docs/ARCHITECTURE.md, docs/RUNBOOK.md (New files)
-  Acceptance Criteria: A user can run dpkg -i sysclean.deb, start the service, and type sysclean dashboard to view a fully functional, live-updating Textual interface, with zero manual python environment setup.
+Replace:
+
+```python id="nh4gw5"
+shell=True
+```
+
+with:
+
+```python id="lb1k44"
+["docker", "system", "prune"]
+```
+
+### Add
+
+* global subprocess timeout,
+* request timeout,
+* structured errors,
+* signal handlers.
+
+### Deliverables
+
+* stable daemon,
+* IPC layer,
+* no shell injection risk.
+
+---
+
+# Phase 2 — Queue & State Engine (3–4 Days)
+
+## Objective
+
+Build deterministic state management.
+
+## Tasks
+
+### SQLite WAL
+
+Enable:
+
+```sql id="7d9phz"
+PRAGMA journal_mode=WAL;
+PRAGMA synchronous=NORMAL;
+```
+
+### Queue Schema
+
+Tables:
+
+* queue
+* rollback_registry
+* telemetry_events
+
+### State Machine
+
+```text id="cyhjlwm"
+PROPOSED
+→ APPROVED
+→ EXECUTING
+→ VERIFYING
+→ COMPLETED
+→ FAILED
+```
+
+### Add
+
+* atomic transitions,
+* crash recovery,
+* stale execution recovery.
+
+### Deliverables
+
+* reliable queue engine,
+* recovery logic,
+* migration system.
+
+---
+
+# Phase 3 — Rollback Engine (4–5 Days)
+
+## Objective
+
+Guarantee safe reversibility.
+
+## Tasks
+
+### Snapshot Strategy
+
+Before execution:
+
+* enumerate targets,
+* compress snapshots,
+* hash archives,
+* register metadata.
+
+### Rollback
+
+Implement:
+
+```bash id="h0z6gw"
+sysclean rollback <id>
+```
+
+### Explicitly Avoid
+
+* eBPF,
+* syscall tracing,
+* kernel hooks.
+
+### Deliverables
+
+* deterministic rollback,
+* verified restore flow.
+
+---
+
+# Phase 4 — Security & Validation (3–4 Days)
+
+## Objective
+
+Prevent destructive mistakes.
+
+## Tasks
+
+### Protected Paths
+
+Block:
+
+```text id="z53d6r"
+~/.ssh
+~/.gnupg
+.env
+wallets
+kube configs
+cloud credentials
+```
+
+### Add
+
+* path canonicalization,
+* symlink escape protection,
+* traversal prevention,
+* manifest schema validation.
+
+### Risk Tiers
+
+```text id="jlwm2u"
+safe
+balanced
+aggressive
+```
+
+### Deliverables
+
+* hardened validation layer,
+* enforced safety rules.
+
+---
+
+# Phase 5 — Core Cleanup Plugins (5–7 Days)
+
+## Objective
+
+Build the actual product.
+
+## Plugins
+
+### Implement
+
+* apt
+* docker
+* snap
+* dev_caches
+* tempfiles
+* logs
+
+### Plugin Rules
+
+Every plugin:
+
+```bash id="9bqof0"
+--plan
+--execute
+```
+
+### Execution Contract
+
+* execute only approved targets,
+* no discovery during execution,
+* strict JSON outputs.
+
+### Deliverables
+
+* production-ready cleanup engine.
+
+---
+
+# Phase 6 — Verification & Chaos Testing (3–5 Days)
+
+## Objective
+
+Prove operational correctness.
+
+## Tests
+
+### Add
+
+* interrupted execution tests,
+* corrupted queue tests,
+* rollback integrity tests,
+* partial failure recovery,
+* concurrent queue access.
+
+### Simulate
+
+```bash id="l5fj9s"
+kill -9
+daemon crash
+power interruption
+```
+
+### Deliverables
+
+* stability validation,
+* recovery guarantees.
+
+---
+
+# Phase 7 — TUI & Observability (3–4 Days)
+
+## Objective
+
+Improve operator visibility.
+
+## Build
+
+### TUI
+
+Show:
+
+* queue state,
+* active execution,
+* reclaimable storage,
+* rollback history.
+
+### Telemetry
+
+Append-only JSONL logs.
+
+### Rules
+
+TUI is:
+
+* read-only,
+* non-executing,
+* observational only.
+
+### Deliverables
+
+* operational dashboard,
+* execution visibility.
+
+---
+
+# Phase 8 — AI Advisory Layer (Optional) (3–5 Days)
+
+## Objective
+
+Add bounded intelligence safely.
+
+## Tasks
+
+### Ollama Integration
+
+AI may:
+
+* summarize,
+* recommend,
+* estimate reclaimable storage.
+
+AI may NOT:
+
+* execute,
+* enqueue directly,
+* bypass validation.
+
+### Resource Awareness
+
+Only:
+
+* docker relationships,
+* mounted volumes,
+* package dependencies.
+
+Avoid generalized graph systems.
+
+### Deliverables
+
+* optional advisory engine,
+* bounded AI scope.
+
+---
+
+# Phase 9 — Packaging & Release (2–4 Days)
+
+## Objective
+
+Ship usable software.
+
+## Tasks
+
+### Packaging
+
+Build:
+
+* `.deb`
+* standalone binary
+* systemd unit
+
+### Documentation
+
+Write:
+
+* architecture.md
+* runbook.md
+* rollback.md
+* plugin_dev.md
+
+### Deliverables
+
+* installable release,
+* production documentation.
+
+---
+
+# Definition of Done
+
+SysClean Core is complete when:
+
+* cleanup operations are deterministic,
+* rollback works reliably,
+* protected assets cannot be deleted,
+* crashes recover safely,
+* queue integrity survives interruption,
+* plugins are production-ready,
+* architecture remains minimal and traceable.
+
+---
+
+# Hard Constraints
+
+## Never Add
+
+* federation,
+* distributed orchestration,
+* mesh systems,
+* autonomous execution,
+* AI governance,
+* digital twins,
+* reinforcement learning,
+* speculative abstractions.
+
+---
+
+# Core Rule
+
+Every new subsystem must justify:
+
+1. operational necessity,
+2. measurable user value,
+3. failure reduction,
+4. maintenance cost.
+
+If not, reject it.

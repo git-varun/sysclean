@@ -1,0 +1,5 @@
+name: docker
+version: 1.0.0
+description: Docker cleanup module
+risk_level: balanced
+entrypoint: clean.py

@@ -2,7 +2,7 @@
 import requests
 import logging  # pylint: disable=wrong-import-order
 
-from providers.base import AIProvider
+from ai.providers.base import AIProvider
 
 logger = logging.getLogger(__name__)
 

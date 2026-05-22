@@ -1,0 +1,5 @@
+name: logs
+version: 1.0.0
+description: System logs cleanup module
+risk_level: balanced
+entrypoint: clean.py

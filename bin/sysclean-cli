@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="$ROOT_DIR/python"
+
+source "$ROOT_DIR/lib/logger.sh"
+source "$ROOT_DIR/lib/ui.sh"
+source "$ROOT_DIR/lib/config.sh"
+source "$ROOT_DIR/lib/guards.sh"
+source "$ROOT_DIR/lib/dependencies.sh"
+source "$ROOT_DIR/lib/confirm.sh"
+# telemetry and execution might not be needed in CLI if daemon handles it
+# but we'll source them just in case
+source "$ROOT_DIR/lib/telemetry.sh"
+source "$ROOT_DIR/lib/execution.sh"
+
+for mod in "$ROOT_DIR/modules/"*.sh; do
+  source "$mod"
+done
+
+CONFIG_PATH="${HOME}/.config/sysclean/config/default.yml"
+
+COMMAND="${1:-help}"
+shift || true
+
+init_logger
+load_config "$CONFIG_PATH"
+validate_environment
+
+case "$COMMAND" in
+  clean)
+    info "Starting cleanup workflow"
+    # CLI just enqueues, or sends operation to daemon
+    run_pipeline "apt"
+    run_pipeline "docker"
+    run_pipeline "snap"
+    run_pipeline "cache"
+    ;;
+  queue)
+    show_queue
+    ;;
+  rollback)
+    info "Executing rollback subsystem"
+    python3 "$ROOT_DIR/python/core/engine.py" "$@"
+    ;;
+  tui)
+    python3 "$ROOT_DIR/python/tui/dashboard.py"
+    ;;
+  client)
+    info "Sending operation to daemon"
+    python3 "$ROOT_DIR/python/core/client.py" "$@"
+    ;;
+  help|*)
+    cat <<EOF
+SysClean CLI
+
+Commands:
+  clean       Execute cleanup workflow
+  queue       Inspect execution queue
+  rollback    Rollback metadata
+  tui         Open textual dashboard
+  client      Send manual operation to daemon
+EOF
+    ;;
+esac

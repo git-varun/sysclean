@@ -1,0 +1,5 @@
+name: dev_caches
+version: 1.0.0
+description: Developer caches cleanup module
+risk_level: balanced
+entrypoint: clean.py
