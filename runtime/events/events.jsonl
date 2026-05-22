@@ -1,2 +1,0 @@
-{"timestamp": "2026-05-22T06:19:48.748648", "event_type": "sysclean_startup", "payload": {"version": "1.0"}}
-{"timestamp": "2026-05-22T06:19:48.748659", "event_type": "operation_started", "payload": {"module": "snap"}}

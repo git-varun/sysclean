@@ -1,20 +1,25 @@
 # SysClean Runbook
 
-## Start the daemon
-\`\`\`bash
-sudo systemctl start syscleand
-\`\`\`
+## Managing the Daemon
+The SysClean execution engine runs via `syscleand.service`.
+- **Status**: `systemctl status syscleand`
+- **Restart**: `sudo systemctl restart syscleand`
+- **Logs**: `journalctl -u syscleand -f`
 
-## Submit a task
-\`\`\`bash
-sysclean-cli clean
-\`\`\`
+## Telemetry
+SysClean emits append-only JSONL event logs containing timestamped telemetry for all operations.
+- **Location**: `~/.local/share/sysclean/runtime/events/events.jsonl`
 
-## View Queue
-\`\`\`bash
+## Observability Dashboard
+To view a live snapshot of the queue, rollback history, and reclaimable storage without executing commands, use the TUI:
+```bash
 sysclean-cli tui
-\`\`\`
+```
 
-## Troubleshooting
-- If tasks are stuck in \`EXECUTING\`, restart daemon. Crash recovery will mark them \`FAILED\`.
-- Check logs in \`~/.local/share/sysclean/events.jsonl\`.
+## AI Advisory
+To fetch safe cleanup recommendations without directly enqueuing them:
+```bash
+sysclean-cli advise docker
+sysclean-cli advise apt
+sysclean-cli advise storage
+```

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.venv/
+venv/
+ENV/
+
+# SysClean Runtime & Data
+sysclean.db
+runtime/
+scratch/
+logs/
+events.jsonl
+
+# Build & Packaging
+build/
+dist/
+*.deb
+packaging/sysclean_*_all/
+packaging/*.deb
+pylint_report*.txt
+
+# IDEs
+.vscode/
+.idea/
+*.swp

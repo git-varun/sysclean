@@ -1,0 +1,10 @@
+Package: sysclean
+Version: 1.0.0
+Section: admin
+Priority: optional
+Architecture: all
+Depends: python3, python3-sqlalchemy, sqlite3
+Maintainer: SysClean Project <maintainer@example.com>
+Description: AI-assisted workstation operations platform.
+ Handles cleanup, optimization, and predictive maintenance
+ with strict rollback and validation guardrails.
