@@ -2,7 +2,7 @@
 import subprocess
 import time
 
-from queue.events import emit_event
+from queue_engine.events import emit_event
 from core.engine import register_rollback, create_snapshot
 from security.validation import validate_operation
 

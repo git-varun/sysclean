@@ -8,5 +8,6 @@ load_config() {
     exit 1
   fi
 
-  python3 python/validation/validator.py "$config_path"
+  # Python validator was removed in Phase 0 architecture reset
+  # Configuration validation is handled natively by modules now
 }

@@ -8,9 +8,9 @@ import multiprocessing
 from pathlib import Path
 from datetime import datetime, timedelta
 
-from queue.db import DB_PATH, get_db, SessionLocal
-from queue.queue import enqueue, transition_state, recover_crashed_tasks, VALID_TRANSITIONS, recover_stale_tasks
-from queue.models import QueueTask, Base
+from queue_engine.db import DB_PATH, get_db, SessionLocal
+from queue_engine.queue import enqueue, transition_state, recover_crashed_tasks, VALID_TRANSITIONS, recover_stale_tasks
+from queue_engine.models import QueueTask, Base
 from core.runtime import execute_operation, CommandExecutionError
 from core.engine import register_rollback, create_snapshot
 
@@ -19,19 +19,19 @@ from core.engine import register_rollback, create_snapshot
 def setup_db():
     # If the DB is locked by an interrupted test, removing it ensures a clean slate
     if DB_PATH.exists():
-        from queue.db import engine
+        from queue_engine.db import engine
         engine.dispose()
         try:
             os.remove(DB_PATH)
         except OSError:
             pass
-    from queue.db import engine
+    from queue_engine.db import engine
     # Create all tables using the pre-configured engine
     Base.metadata.create_all(engine)
     
     yield
     if DB_PATH.exists():
-        from queue.db import engine
+        from queue_engine.db import engine
         engine.dispose()
         try:
             os.remove(DB_PATH)
@@ -77,7 +77,7 @@ def test_concurrent_queue_access():
 
 def _crash_worker(op_id):
     """Worker that simulates daemon work but hangs, waiting to be killed."""
-    from queue.db import engine
+    from queue_engine.db import engine
     engine.dispose()
     transition_state(op_id, "APPROVED", "PROPOSED")
     transition_state(op_id, "EXECUTING", "APPROVED")

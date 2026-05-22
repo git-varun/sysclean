@@ -20,8 +20,8 @@ import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-from queue.models import Base
-from queue.db import DB_PATH
+from queue_engine.models import Base
+from queue_engine.db import DB_PATH
 
 target_metadata = Base.metadata
 

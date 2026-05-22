@@ -6,7 +6,7 @@ import os
 import subprocess
 import hashlib
 from pathlib import Path
-from queue.db import DB_PATH
+from queue_engine.db import DB_PATH
 
 SNAPSHOT_DIR = Path.home() / ".local/share/sysclean/snapshots"
 SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)

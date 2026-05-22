@@ -6,9 +6,9 @@ import time
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "python")))
 
-from queue.db import engine, SessionLocal
-from queue.models import QueueTask, RollbackRegistry, Base
-from queue.events import emit_event
+from queue_engine.db import engine, SessionLocal
+from queue_engine.models import QueueTask, RollbackRegistry, Base
+from queue_engine.events import emit_event
 
 def populate():
     Base.metadata.create_all(engine)

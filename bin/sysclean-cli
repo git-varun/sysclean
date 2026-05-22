@@ -16,9 +16,11 @@ source "$ROOT_DIR/lib/confirm.sh"
 source "$ROOT_DIR/lib/telemetry.sh"
 source "$ROOT_DIR/lib/execution.sh"
 
+shopt -s nullglob
 for mod in "$ROOT_DIR/modules/"*.sh; do
   source "$mod"
 done
+shopt -u nullglob
 
 CONFIG_PATH="${HOME}/.config/sysclean/config/default.yml"
 
@@ -52,6 +54,10 @@ case "$COMMAND" in
     info "Sending operation to daemon"
     python3 "$ROOT_DIR/python/core/client.py" "$@"
     ;;
+  advise)
+    info "Requesting AI Advisory"
+    python3 "$ROOT_DIR/python/ai/advisory.py" "${1:-}"
+    ;;
   help|*)
     cat <<EOF
 SysClean CLI
@@ -62,6 +68,7 @@ Commands:
   rollback    Rollback metadata
   tui         Open textual dashboard
   client      Send manual operation to daemon
+  advise      Request AI recommendations (docker|apt|storage)
 EOF
     ;;
 esac

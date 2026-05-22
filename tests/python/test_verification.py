@@ -5,16 +5,16 @@ import time
 from pathlib import Path
 from datetime import datetime
 
-from queue.db import DB_PATH, get_db
-from queue.queue import enqueue, transition_state, recover_crashed_tasks, VALID_TRANSITIONS
-from queue.models import QueueTask, Base
+from queue_engine.db import DB_PATH, get_db
+from queue_engine.queue import enqueue, transition_state, recover_crashed_tasks, VALID_TRANSITIONS
+from queue_engine.models import QueueTask, Base
 from core.runtime import execute_operation, CommandExecutionError
 from core.engine import register_rollback, create_snapshot
 
 # Setup test DB
 @pytest.fixture(autouse=True)
 def setup_db():
-    from queue.db import engine
+    from queue_engine.db import engine
     engine.dispose()
     if DB_PATH.exists():
         os.remove(DB_PATH)
@@ -22,7 +22,7 @@ def setup_db():
     engine = create_engine(f"sqlite:///{DB_PATH}")
     Base.metadata.create_all(engine)
     yield
-    from queue.db import engine
+    from queue_engine.db import engine
     engine.dispose()
     if DB_PATH.exists():
         os.remove(DB_PATH)
@@ -54,7 +54,7 @@ def test_crash_recovery():
     recover_crashed_tasks()
     
     # Check states directly in DB
-    from queue.db import SessionLocal
+    from queue_engine.db import SessionLocal
     db = SessionLocal()
     task1 = db.query(QueueTask).filter(QueueTask.operation_id == op_id1).first()
     assert task1.status == "FAILED"
