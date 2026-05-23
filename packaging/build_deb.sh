@@ -19,7 +19,6 @@ cp -r packaging/DEBIAN "${BUILD_DIR}/"
 cp bin/sysclean-cli "${BUILD_DIR}/usr/local/bin/"
 cp bin/syscleand "${BUILD_DIR}/usr/local/bin/"
 chmod +x "${BUILD_DIR}/usr/local/bin/sysclean-cli"
-"${BUILD_DIR}/usr/local/bin/syscleand" || true # just ensuring existence, actually wait, `cp` is fine
 chmod +x "${BUILD_DIR}/usr/local/bin/syscleand"
 
 # Copy python libraries and plugins
