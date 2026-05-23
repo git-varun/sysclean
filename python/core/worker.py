@@ -10,7 +10,7 @@ import time
 from queue_engine.db import SessionLocal
 from queue_engine.models import QueueTask
 from queue_engine.queue import enqueue, recover_crashed_tasks, transition_state, recover_stale_tasks
-from .runtime import execute_operation
+from core.runtime import execute_operation
 
 SOCKET_PATH = "/var/run/sysclean.sock"
 

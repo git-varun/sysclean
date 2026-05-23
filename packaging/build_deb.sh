@@ -24,6 +24,7 @@ chmod +x "${BUILD_DIR}/usr/local/bin/syscleand"
 # Copy python libraries and plugins
 cp -r python "${BUILD_DIR}/usr/local/share/sysclean/"
 cp -r modules "${BUILD_DIR}/usr/local/share/sysclean/"
+cp -r lib "${BUILD_DIR}/usr/local/share/sysclean/"
 
 # Adjust ROOT_DIR in binaries
 sed -i 's|ROOT_DIR=.*|ROOT_DIR="/usr/local/share/sysclean"|g' "${BUILD_DIR}/usr/local/bin/sysclean-cli"

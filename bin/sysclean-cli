@@ -22,7 +22,7 @@ for mod in "$ROOT_DIR/modules/"*.sh; do
 done
 shopt -u nullglob
 
-CONFIG_PATH="${HOME}/.config/sysclean/config/default.yml"
+CONFIG_PATH="/etc/sysclean/default.yml"
 
 COMMAND="${1:-help}"
 shift || true
