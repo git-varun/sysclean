@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$1" = "configure" ]; then
+    echo "Setting up virtual environment for SysClean..."
+    python3 -m venv /usr/local/share/sysclean/venv
+    /usr/local/share/sysclean/venv/bin/pip install --upgrade pip
+    /usr/local/share/sysclean/venv/bin/pip install -r /usr/local/share/sysclean/requirements.txt
+fi
+
+exit 0

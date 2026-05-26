@@ -1,6 +1,6 @@
 run_pipeline() {
   local module_name="$1"
-  local module_script="$ROOT_DIR/modules/$module_name/module.sh"
+  local module_script="$ROOT_DIR/modules/$module_name/clean.py"
 
   if [[ ! -f "$module_script" ]]; then
     error "Module $module_name not found at $module_script"
@@ -9,7 +9,7 @@ run_pipeline() {
 
   info "Planning module: $module_name"
   local plan_json
-  plan_json=$("$module_script" --plan)
+  plan_json=$("$PYTHON" "$module_script" --plan)
 
   if [[ -z "$plan_json" ]]; then
     error "Failed to generate plan for $module_name"
@@ -22,11 +22,7 @@ run_pipeline() {
     return 1
   fi
 
-  info "Module $module_name plan generated."
-  # Optional: show estimated bytes
-  local size
-  size=$(echo "$plan_json" | grep -oP '"estimated_bytes":\s*\K[0-9]+' || echo 0)
-  info "Estimated reclaimable space: $size bytes"
+  "$PYTHON" "$ROOT_DIR/python/tui/cli_plan_formatter.py" "$plan_json"
 
   confirm_destructive "$module_name execution"
 

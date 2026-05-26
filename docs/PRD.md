@@ -52,8 +52,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 
 ### 4.6 User Interfaces
 - **CLI:** Primary interface for automation and standard operations.
-- **TUI (Textual):** Interactive dashboard for real-time monitoring and health visualization.
-- **Web UI (FastAPI):** Remote management and rich data visualization (Plotly).
+- **Web UI (React/Vite & FastAPI):** A modern, real-time dashboard for monitoring queue state, health, and reclaimable storage. Fully replaces the legacy Textual TUI.
 
 <!-- SYSTEM METRICS & NFRs -->
 ## 5. Non-Functional Requirements
@@ -74,7 +73,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **Languages:** Bash 5.0+, Python 3.11+.
 - **Database:** SQLite 3 for operational data.
 - **AI:** Ollama (Local), Sentence-Transformers, NetworkX (Graph).
-- **Web/UI:** FastAPI, Textual, Rich, Plotly.
+- **Web/UI:** FastAPI, React, Vite.
 
 <!-- TIMELINE & PLANNING -->
 ## 7. Roadmap & Milestones
@@ -87,7 +86,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 ### Phase 2: Implementation
 - Deliver production-ready modules for `apt`, `docker`, and `snap`.
 - Integrate local AI recommendations via Ollama.
-- Deploy the TUI dashboard.
+- Deploy the React Web UI dashboard.
 
 ### Phase 3: Advanced Intelligence
 - Implement Infrastructure Memory Graph.
@@ -111,5 +110,5 @@ To become the AI-native operating layer for developer infrastructure, providing 
 ## 10. Success Metrics (KPIs)
 - **Disk Recovery:** Average GBs reclaimed per cleanup.
 - **System Stability:** Number of system failures vs. successful rollbacks.
-- **User Engagement:** Frequency of TUI/Web dashboard usage.
+- **User Engagement:** Frequency of Web dashboard usage.
 - **AI Accuracy:** Relevance score of AI-generated maintenance recommendations.

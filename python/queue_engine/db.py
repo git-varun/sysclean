@@ -16,6 +16,9 @@ engine = create_engine(
     connect_args={"check_same_thread": False, "timeout": 15}
 )
 
+from queue_engine.models import Base
+Base.metadata.create_all(bind=engine)
+
 @event.listens_for(engine, "connect")
 def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()

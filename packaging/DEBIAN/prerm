@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [ "$1" = "remove" ]; then
+    echo "Removing virtual environment for SysClean..."
+    rm -rf /usr/local/share/sysclean/venv
+fi
+
+exit 0

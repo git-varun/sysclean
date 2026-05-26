@@ -10,4 +10,17 @@ echo "Starting syscleand daemon..."
 # Handle signal for graceful shutdown
 trap 'echo "syscleand stopping..."; exit 0' SIGINT SIGTERM
 
-exec python3 "$ROOT_DIR/python/core/worker.py"
+PYTHON="python3"
+if [ -x "$ROOT_DIR/venv/bin/python" ]; then
+    PYTHON="$ROOT_DIR/venv/bin/python"
+elif [ -x "$ROOT_DIR/.venv/bin/python" ]; then
+    PYTHON="$ROOT_DIR/.venv/bin/python"
+fi
+
+if [ -f "$ROOT_DIR/.env" ]; then
+    set -a
+    source "$ROOT_DIR/.env"
+    set +a
+fi
+
+exec "$PYTHON" "$ROOT_DIR/python/core/worker.py"

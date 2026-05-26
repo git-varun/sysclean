@@ -16,14 +16,13 @@ SysClean is a modular, AI-native operating layer for Ubuntu developer environmen
 - **Modular Plugin Architecture:** Capability-gated, manifest-driven plugins for cleaning APT, Snap, Docker, and developer caches (npm, pip, yarn). Plugins operate under strict risk tiers (`safe`, `balanced`, `aggressive`).
 - **Rich Interfaces:** 
   - **CLI:** Fast, standard interface for automation.
-  - **TUI (Textual):** Real-time interactive dashboard for monitoring queue state and health.
-  - **Web UI (FastAPI):** Remote management with rich Plotly data visualization.
+  - **Web UI (React + FastAPI):** A modern, dynamic real-time dashboard for monitoring queue state, rollback history, and system health (replacing the legacy Textual TUI).
 
 <!-- ARCHITECTURE OVERVIEW -->
 ## 🏗 Architecture
 
 SysClean operates on a **Dual-Engine** architecture to decouple intelligence from high-privilege execution:
-1. **Client-Server Model:** `sysclean-cli` runs as a standard user, interacting with local LLMs and constructing execution plans. The `syscleand` daemon runs as root (or privileged namespace), listening on a restricted Unix Domain Socket to execute validated plans.
+1. **Client-Server Model:** `sysclean-cli` runs as a standard user, interacting with local LLMs and constructing execution plans. The `syscleand` background daemon auto-spawns on demand, listening on a local user-owned Unix Domain Socket (`~/.local/share/sysclean/sysclean.sock`) to execute validated plans safely without manual sudo interventions.
 2. **Deterministic Execution Engine:** Uses Linux namespaces or cgroups to isolate module execution, ensuring plugins only touch what they are authorized to touch.
 3. **Semantic Infrastructure Graph:** Models system resources and dependencies as a directed graph, providing the AI with the necessary context to avoid breaking running services (e.g., avoiding the deletion of a Docker volume currently attached to an active container).
 
@@ -71,18 +70,11 @@ sysclean clean
 sysclean rollback <transaction-id>
 ```
 
-### Text User Interface (TUI)
-Launch the interactive Textual dashboard for a live, top-like view of your workstation health and the execution queue.
-
-```bash
-sysclean dashboard
-```
-
 ### Web Dashboard
-Start the local FastAPI server to view detailed telemetry, predictive storage charts, and infrastructure graphs.
+Start the local FastAPI server and React frontend to view detailed telemetry, queue states, and health overview in your browser.
 
 ```bash
-sysclean web --port 8080
+./bin/sysclean-cli ui
 ```
 
 <!-- PROJECT ROADMAP -->
@@ -92,7 +84,7 @@ SysClean is being built in distinct phases to ensure stability and security:
 - **Phase 1-3:** Zero-Trust Architecture, SQLite WAL State Management, and Deterministic Execution.
 - **Phase 4-5:** eBPF-Powered Perfect Rollback and Deep Safety Guardrails.
 - **Phase 6-7:** Core Remediation Plugins and Semantic Graph/AI Reasoning Integration.
-- **Phase 8-10:** Autonomous Self-Healing Daemon, Enterprise Fleet Federation, and TUI/Web UI Polish.
+- **Phase 8-10:** Autonomous Self-Healing Daemon, Enterprise Fleet Federation, and Web UI Polish.
 
 <!-- DOCUMENTATION LINKS -->
 ## 📄 Documentation

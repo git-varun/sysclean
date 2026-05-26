@@ -7,11 +7,11 @@ import os
 
 # Add parent directory to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-from ai.providers.ollama import OllamaProvider
+from ai.providers.factory import ProviderFactory
 
 class AdvisoryEngine:
     def __init__(self):
-        self.provider = OllamaProvider(timeout=15)
+        self.provider = ProviderFactory.get_provider()
 
     def _run_cmd(self, cmd):
         try:
@@ -93,5 +93,10 @@ if __name__ == "__main__":
         print(res["response"])
     elif isinstance(res, dict) and "error" in res:
         print(f"Error: {res['error']}")
+        if "ConnectionError" in res["error"]:
+            print("\nHint: If you're trying to use Ollama, make sure the service is running.")
+            print("Alternatively, to use Google Gemini, create a '.env' file in the project root with:")
+            print("SYSCLEAN_AI_PROVIDER=google")
+            print("GOOGLE_API_KEY=your_api_key_here")
     else:
         print(res)

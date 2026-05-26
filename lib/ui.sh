@@ -11,3 +11,7 @@ header() {
   echo -e "${GREEN}$1${NC}"
   echo -e "${BLUE}================================================${NC}"
 }
+
+show_queue() {
+  "$PYTHON" "$ROOT_DIR/python/tui/cli_queue.py"
+}

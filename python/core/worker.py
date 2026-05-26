@@ -12,7 +12,9 @@ from queue_engine.models import QueueTask
 from queue_engine.queue import enqueue, recover_crashed_tasks, transition_state, recover_stale_tasks
 from core.runtime import execute_operation
 
-SOCKET_PATH = "/var/run/sysclean.sock"
+import pathlib
+
+SOCKET_PATH = str(pathlib.Path.home() / ".local/share/sysclean/sysclean.sock")
 
 
 class QueueProcessor(threading.Thread):
@@ -105,7 +107,7 @@ class DaemonListener:  # pylint: disable=too-few-public-methods
 
         with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as server_sock:
             server_sock.bind(self.socket_path)
-            os.chmod(self.socket_path, 0o600)  # Restrict access
+            os.chmod(self.socket_path, 0o666)  # Allow local users to enqueue tasks
             server_sock.listen()
             print(f"Listening on {self.socket_path}...")
 

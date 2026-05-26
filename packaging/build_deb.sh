@@ -25,6 +25,12 @@ chmod +x "${BUILD_DIR}/usr/local/bin/syscleand"
 cp -r python "${BUILD_DIR}/usr/local/share/sysclean/"
 cp -r modules "${BUILD_DIR}/usr/local/share/sysclean/"
 cp -r lib "${BUILD_DIR}/usr/local/share/sysclean/"
+cp requirements.txt "${BUILD_DIR}/usr/local/share/sysclean/"
+
+# Ensure maintainer scripts are executable
+chmod 755 "${BUILD_DIR}/DEBIAN/postinst" || true
+chmod 755 "${BUILD_DIR}/DEBIAN/prerm" || true
+
 
 # Adjust ROOT_DIR in binaries
 sed -i 's|ROOT_DIR=.*|ROOT_DIR="/usr/local/share/sysclean"|g' "${BUILD_DIR}/usr/local/bin/sysclean-cli"
