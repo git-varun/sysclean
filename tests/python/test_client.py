@@ -20,41 +20,41 @@ def test_send_operation_success(mock_socket):
     assert sent_data == {"test": "data"}
 
 @patch('core.client.socket.socket')
-@patch('core.client.sys.exit')
+@patch('core.client.sys.exit', side_effect=SystemExit(1))
 def test_send_operation_connection_error(mock_exit, mock_socket):
     mock_conn = MagicMock()
     mock_socket.return_value.__enter__.return_value = mock_conn
     mock_conn.connect.side_effect = Exception("Socket missing")
-    
-    send_operation({"test": "data"}, socket_path="/tmp/test.sock")
+    with pytest.raises(SystemExit):
+        send_operation({"test": "data"}, socket_path="/tmp/test.sock")
     mock_exit.assert_called_once_with(1)
 
 @patch('core.client.socket.socket')
-@patch('core.client.sys.exit')
+@patch('core.client.sys.exit', side_effect=SystemExit(1))
 def test_send_operation_timeout(mock_exit, mock_socket):
     mock_conn = MagicMock()
     mock_socket.return_value.__enter__.return_value = mock_conn
     mock_conn.connect.side_effect = socket.timeout()
-    
-    send_operation({"test": "data"}, socket_path="/tmp/test.sock")
+    with pytest.raises(SystemExit):
+        send_operation({"test": "data"}, socket_path="/tmp/test.sock")
     mock_exit.assert_called_once_with(1)
 
 @patch('core.client.socket.socket')
-@patch('core.client.sys.exit')
+@patch('core.client.sys.exit', side_effect=SystemExit(1))
 def test_send_operation_no_response(mock_exit, mock_socket):
     mock_conn = MagicMock()
     mock_socket.return_value.__enter__.return_value = mock_conn
     mock_conn.recv.return_value = b""
-    
-    send_operation({"test": "data"}, socket_path="/tmp/test.sock")
+    with pytest.raises(SystemExit):
+        send_operation({"test": "data"}, socket_path="/tmp/test.sock")
     mock_exit.assert_called_once_with(1)
 
 @patch('core.client.socket.socket')
-@patch('core.client.sys.exit')
+@patch('core.client.sys.exit', side_effect=SystemExit(1))
 def test_send_operation_error_response(mock_exit, mock_socket):
     mock_conn = MagicMock()
     mock_socket.return_value.__enter__.return_value = mock_conn
     mock_conn.recv.return_value = json.dumps({"status": "error", "error": "Invalid params"}).encode('utf-8')
-    
-    send_operation({"test": "data"}, socket_path="/tmp/test.sock")
+    with pytest.raises(SystemExit):
+        send_operation({"test": "data"}, socket_path="/tmp/test.sock")
     mock_exit.assert_called_once_with(1)

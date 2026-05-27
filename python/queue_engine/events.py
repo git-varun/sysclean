@@ -4,12 +4,10 @@ import pathlib
 import threading
 import collections
 import atexit
-from datetime import datetime
+from datetime import datetime, timezone
 
 
-EVENT_LOG = pathlib.Path(
-    "runtime/events/events.jsonl"
-)
+EVENT_LOG = pathlib.Path.home() / ".local/share/sysclean/events.jsonl"
 
 EVENT_LOG.parent.mkdir(
     parents=True,
@@ -56,7 +54,7 @@ def emit_event(event_type, payload):
     """Function docstring."""
 
     entry = {
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "event_type": event_type,
         "payload": payload
     }

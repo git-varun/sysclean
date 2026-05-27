@@ -15,17 +15,17 @@ from core.engine import register_rollback, create_snapshot
 @pytest.fixture(autouse=True)
 def setup_db():
     from queue_engine.db import engine
-    engine.dispose()
-    if DB_PATH.exists():
-        os.remove(DB_PATH)
-    from sqlalchemy import create_engine
-    engine = create_engine(f"sqlite:///{DB_PATH}")
-    Base.metadata.create_all(engine)
+    from queue_engine.models import Base
+    
+    # Create tables if they don't exist
+    Base.metadata.create_all(bind=engine)
+    
+    # Clear all data from tables before each test
+    with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            conn.execute(table.delete())
+            
     yield
-    from queue_engine.db import engine
-    engine.dispose()
-    if DB_PATH.exists():
-        os.remove(DB_PATH)
 
 def test_queue_state_machine():
     op_id = enqueue("test_module", {"command": ["echo", "test"]})
@@ -84,3 +84,26 @@ def test_snapshot_rollback_integrity(tmp_path):
     execute_rollback()
     
     assert test_file.read_text() == "hello world"
+
+def test_snapshot_rollback_integrity_dict_targets(tmp_path):
+    test_file = tmp_path / "test.txt"
+    test_file.write_text("hello world dict")
+    
+    op_id = "test_op_456"
+    metadata = create_snapshot(op_id, [{"id": "test_id", "type": "file", "path": str(test_file)}])
+    
+    assert "archive_path" in metadata
+    assert "hash" in metadata
+    assert metadata["targets"] == [str(test_file)]
+    
+    # Modify the file
+    test_file.write_text("modified dict")
+    
+    # Mock an operation
+    op = {"id": op_id, "module": "test", "rollback": {}}
+    register_rollback(op, metadata)
+    
+    from core.engine import execute_rollback
+    execute_rollback()
+    
+    assert test_file.read_text() == "hello world dict"

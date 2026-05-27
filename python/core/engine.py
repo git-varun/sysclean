@@ -2,6 +2,7 @@
 import json
 import sqlite3
 import datetime
+from datetime import timezone
 import os
 import subprocess
 import hashlib
@@ -25,8 +26,18 @@ def create_snapshot(operation_id: str, targets: list) -> dict:
     if not targets:
         return {}
 
-    # Filter targets to only those that exist to avoid tar errors
-    existing_targets = [t for t in targets if os.path.exists(t)]
+    # Extract and filter paths from targets (supporting both string and dictionary targets)
+    existing_targets = []
+    for t in targets:
+        path_to_check = None
+        if isinstance(t, dict):
+            path_to_check = t.get("path")
+        elif isinstance(t, str):
+            path_to_check = t
+            
+        if path_to_check and os.path.exists(path_to_check):
+            existing_targets.append(path_to_check)
+
     if not existing_targets:
         return {}
 
@@ -54,7 +65,7 @@ def register_rollback(operation, snapshot_metadata=None):
     if not rollback and not snapshot_metadata:
         return
 
-    rollback_id = f"rb_{operation.get('id', 'unknown')}_{datetime.datetime.utcnow().strftime('%s')}"
+    rollback_id = f"rb_{operation.get('id', 'unknown')}_{datetime.datetime.now(timezone.utc).strftime('%s')}"
     operation_id = operation.get("id", "unknown")
     module = operation.get("module", "unknown")
     
@@ -62,7 +73,7 @@ def register_rollback(operation, snapshot_metadata=None):
     payload = snapshot_metadata if snapshot_metadata else rollback.get("payload", {})
     
     rollback_payload = json.dumps(payload)
-    created_at = datetime.datetime.utcnow().isoformat()
+    created_at = datetime.datetime.now(timezone.utc).isoformat()
 
     with _get_connection() as conn:
         cursor = conn.cursor()

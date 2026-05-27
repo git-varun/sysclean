@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONPATH="$ROOT_DIR/python"
+
+PYTHON="python3"
+if [ -x "$ROOT_DIR/venv/bin/python" ]; then
+    PYTHON="$ROOT_DIR/venv/bin/python"
+elif [ -x "$ROOT_DIR/.venv/bin/python" ]; then
+    PYTHON="$ROOT_DIR/.venv/bin/python"
+fi
+
+# 1. Load .env from Current Working Directory where command is run
+if [ -f ".env" ]; then
+    set -a
+    source ".env"
+    set +a
+fi
+
+# 2. Load .env from User Home Config directory
+if [ -f "$HOME/.config/sysclean/.env" ]; then
+    set -a
+    source "$HOME/.config/sysclean/.env"
+    set +a
+fi
+
+# 3. Load .env from Root installation directory
+if [ -f "$ROOT_DIR/.env" ]; then
+    set -a
+    source "$ROOT_DIR/.env"
+    set +a
+fi
+
+echo "[INFO] Starting SysClean Web UI on port 8080..."
+cd "$ROOT_DIR"
+exec "$PYTHON" -m uvicorn python.web.server:app --port 8080

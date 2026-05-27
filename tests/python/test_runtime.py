@@ -16,6 +16,7 @@ def test_execute_operation_security_validation_failure(mock_validate):
 @patch('core.runtime.register_rollback')
 @patch('core.runtime.subprocess.run')
 def test_execute_operation_success(mock_run, mock_register, mock_snapshot, mock_emit, mock_validate):
+    import json
     mock_run.return_value = MagicMock(returncode=0, stderr="")
     mock_snapshot.return_value = {"snapshot": "meta"}
     
@@ -25,6 +26,8 @@ def test_execute_operation_success(mock_run, mock_register, mock_snapshot, mock_
     mock_validate.assert_called_once_with(op)
     mock_snapshot.assert_called_once_with("123", ["/tmp/test"])
     mock_run.assert_called_once()
+    args, kwargs = mock_run.call_args
+    assert kwargs.get("input") == json.dumps(op)
     mock_register.assert_called_once_with(op, {"snapshot": "meta"})
 
 @patch('core.runtime.validate_operation')

@@ -60,7 +60,15 @@ def validate_operation(operation: dict) -> bool:
 
     targets = operation.get("targets", [])
     for target in targets:
-        if not is_path_safe(target):
-            raise PermissionError(f"Target path {target} is protected or unsafe.")
+        path_to_check = None
+        if isinstance(target, dict):
+            path_to_check = target.get("path")
+        elif isinstance(target, str):
+            path_to_check = target
+            
+        if path_to_check:
+            if not is_path_safe(path_to_check):
+                raise PermissionError(f"Target path {path_to_check} is protected or unsafe.")
             
     return True
+

@@ -51,7 +51,7 @@ def execute():
             name = t["name"]
             revision = t["revision"]
             try:
-                subprocess.check_call(["sudo", "snap", "remove", name, "--revision", revision], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call(["snap", "remove", name, "--revision", revision], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError as e:
                 status = "partial_failure"
                 errors.append(f"failed to remove snap {name} revision {revision}: {e}")

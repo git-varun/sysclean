@@ -1,9 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Stop and disable systemd service if running/enabled
+if systemctl is-active --quiet syscleand; then
+    echo "Stopping syscleand service..."
+    systemctl stop syscleand || true
+fi
+
+if systemctl is-enabled --quiet syscleand; then
+    echo "Disabling syscleand service..."
+    systemctl disable syscleand || true
+fi
+
+systemctl daemon-reload || true
+
 if [ "$1" = "remove" ]; then
     echo "Removing virtual environment for SysClean..."
     rm -rf /usr/local/share/sysclean/venv
 fi
 
 exit 0
+

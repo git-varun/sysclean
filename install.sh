@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "SysClean has been upgraded to use a Debian package (.deb) deployment system"
-echo "to securely manage the privileged syscleand daemon via systemd."
+echo "SysClean uses a Debian package (.deb) deployment system"
+echo "to install the CLI tools into your environment."
 echo ""
 echo "Building the latest package..."
 bash packaging/build_deb.sh

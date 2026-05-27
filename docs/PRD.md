@@ -11,8 +11,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 
 ### 2.2 Strategic Objectives
 - **Safety First:** Ensure zero-risk cleanup through sophisticated rollback mechanisms and protected asset detection.
-- **Intelligence:** Leverage local AI (Ollama) and semantic infrastructure graphs to provide actionable insights.
-- **Modularity:** Support a manifest-based plugin architecture for extensible system management.
+- **Intelligence:** Leverage local AI (Ollama) and cloud-based Gemini APIs to provide actionable insights.
 - **Scalability:** Transition from single-workstation optimization to distributed fleet orchestration.
 
 ## 3. Target Audience
@@ -25,7 +24,7 @@ To become the AI-native operating layer for developer infrastructure, providing 
 ## 4. Functional Requirements
 
 ### 4.1 Core Runtime & Orchestration
-- **Dual-Engine Execution:** Bash for low-level CLI/runtime orchestration; Python for high-level intelligence and logic.
+- **Python Execution:** Unified execution runtime written in Python 3.11+; no complex multi-language bash bindings.
 - **Transactional Queue:** SQLite-backed queue to ensure persistent execution state and atomic operations.
 - **Event Stream:** Append-only JSONL telemetry for auditing and real-time monitoring.
 
@@ -46,13 +45,8 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - **Governance Constraints:** Capability-gated execution and mandatory approvals for destructive actions.
 - **Rollback Registry:** Mandatory metadata recording for every operation to allow single-command restoration.
 
-### 4.5 Plugin Architecture
-- **Manifest-Driven:** Plugins defined by YAML manifests specifying versioning, risk level, and required capabilities.
-- **Capability Gating:** Strict control over plugin access to filesystem, networking, or package managers.
-
-### 4.6 User Interfaces
-- **CLI:** Primary interface for automation and standard operations.
-- **Web UI (React/Vite & FastAPI):** A modern, real-time dashboard for monitoring queue state, health, and reclaimable storage. Fully replaces the legacy Textual TUI.
+### 4.5 User Interfaces
+- **Web UI (React/Vite & FastAPI):** A modern, real-time dashboard for monitoring queue state, health, and reclaimable storage. Serves as the primary control center, completely replacing the legacy CLI and Textual TUI.
 
 <!-- SYSTEM METRICS & NFRs -->
 ## 5. Non-Functional Requirements
@@ -70,10 +64,10 @@ To become the AI-native operating layer for developer infrastructure, providing 
 - Encryption for local telemetry/logs if sensitive data is present.
 
 ## 6. Technical Stack
-- **Languages:** Bash 5.0+, Python 3.11+.
+- **Languages:** Python 3.11+.
 - **Database:** SQLite 3 for operational data.
-- **AI:** Ollama (Local), Sentence-Transformers, NetworkX (Graph).
-- **Web/UI:** FastAPI, React, Vite.
+- **AI:** Ollama (Local LLM), Google Generative AI (Gemini SDK).
+- **Web/UI:** FastAPI, React, Vite, Tailwind CSS / Vanilla CSS.
 
 <!-- TIMELINE & PLANNING -->
 ## 7. Roadmap & Milestones

@@ -1,9 +1,11 @@
 import pathlib
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 # Path configured to ~/... sysclean.db
-DB_PATH = pathlib.Path.home() / ".local/share/sysclean/sysclean.db"
+default_path = pathlib.Path.home() / ".local/share/sysclean/sysclean.db"
+DB_PATH = pathlib.Path(os.environ.get("SYSCLEAN_DB_PATH", default_path))
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 # High concurrency SQLite: WAL mode and normal synchronous

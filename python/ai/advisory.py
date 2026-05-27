@@ -9,6 +9,10 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from ai.providers.factory import ProviderFactory
 
+from core.logger import get_logger
+
+logger = get_logger("sysclean.ai")
+
 class AdvisoryEngine:
     def __init__(self):
         self.provider = ProviderFactory.get_provider()
@@ -20,26 +24,26 @@ class AdvisoryEngine:
             return ""
 
     def analyze_docker_resources(self):
-        print("Gathering Docker state...")
+        logger.info("Gathering Docker state...")
         images = self._run_cmd(["docker", "images", "--format", "{{.Repository}}:{{.Tag}} ({{.Size}})"])
         containers = self._run_cmd(["docker", "ps", "-a", "--format", "{{.Names}} - {{.Status}}"])
         volumes = self._run_cmd(["docker", "volume", "ls", "--format", "{{.Name}}"])
         
         telemetry = f"Docker State:\nImages:\n{images}\nContainers:\n{containers}\nVolumes:\n{volumes}"
-        print("Consulting AI provider...")
+        logger.info("Consulting AI provider...")
         return self.provider.generate_recommendation(telemetry)
 
     def analyze_apt_packages(self):
-        print("Gathering APT package state...")
+        logger.info("Gathering APT package state...")
         manual_pkgs = self._run_cmd(["apt-mark", "showmanual"])
         autoremove = self._run_cmd(["apt-get", "-s", "autoremove"])
         
         telemetry = f"Apt State:\nManually installed packages summary (first 20 lines):\n{chr(10).join(manual_pkgs.splitlines()[:20])}\nAutoremove simulation:\n{autoremove}"
-        print("Consulting AI provider...")
+        logger.info("Consulting AI provider...")
         return self.provider.generate_recommendation(telemetry)
 
     def estimate_reclaimable_storage(self):
-        print("Analyzing SysClean queue...")
+        logger.info("Analyzing SysClean queue...")
         DB_PATH = pathlib.Path.home() / ".local/share/sysclean/sysclean.db"
         if not DB_PATH.exists():
             return {"error": "No active queue database found."}
@@ -67,7 +71,7 @@ class AdvisoryEngine:
                     
         total_mb = total_bytes / (1024*1024)
         telemetry = f"Queue Tasks:\n" + "\n".join(summary) + f"\nTotal estimated savings: {total_mb:.1f} MB."
-        print("Consulting AI provider...")
+        logger.info("Consulting AI provider...")
         return self.provider.generate_recommendation(telemetry)
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
 from .models import QueueTask
@@ -49,7 +49,7 @@ def transition_state(operation_id: str, new_status: str, expected_current_status
             if not task or new_status not in VALID_TRANSITIONS.get(task.status, []):
                 return False
         
-        updated_count = query.update({"status": new_status, "updated_at": datetime.utcnow()})
+        updated_count = query.update({"status": new_status, "updated_at": datetime.now(timezone.utc)})
         db.commit()
         return updated_count > 0
     except OperationalError:
@@ -66,7 +66,7 @@ def recover_crashed_tasks():
     db: Session = SessionLocal()
     try:
         db.query(QueueTask).filter(QueueTask.status.in_(["EXECUTING", "VERIFYING"])).update(
-            {"status": "FAILED", "updated_at": datetime.utcnow()}
+            {"status": "FAILED", "updated_at": datetime.now(timezone.utc)}
         )
         db.commit()
     except OperationalError:
@@ -80,11 +80,11 @@ def recover_stale_tasks(stale_minutes=30):
     """
     db: Session = SessionLocal()
     try:
-        threshold = datetime.utcnow() - timedelta(minutes=stale_minutes)
+        threshold = datetime.now(timezone.utc) - timedelta(minutes=stale_minutes)
         db.query(QueueTask).filter(
             QueueTask.status.in_(["EXECUTING", "VERIFYING"]),
             QueueTask.updated_at < threshold
-        ).update({"status": "FAILED", "updated_at": datetime.utcnow()})
+        ).update({"status": "FAILED", "updated_at": datetime.now(timezone.utc)})
         db.commit()
     except OperationalError:
         db.rollback()

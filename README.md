@@ -46,11 +46,11 @@ SysClean employs deep safety mechanisms to prevent catastrophic errors (whether 
 git clone https://github.com/your-org/sysclean.git
 cd sysclean
 
-# 2. Setup the environment (Python 3.11+, SQLite 3, Ollama)
+# 2. Setup the environment and build the package
 ./install.sh
 
-# 3. Start the SysClean daemon
-sudo systemctl enable --now syscleand
+# 3. Install the generated Debian package
+sudo dpkg -i packaging/sysclean_1.0.0_all.deb
 ```
 
 <!-- USAGE EXAMPLES -->
@@ -74,7 +74,7 @@ sysclean rollback <transaction-id>
 Start the local FastAPI server and React frontend to view detailed telemetry, queue states, and health overview in your browser.
 
 ```bash
-./bin/sysclean-cli ui
+sysclean ui
 ```
 
 <!-- PROJECT ROADMAP -->

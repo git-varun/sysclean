@@ -25,6 +25,20 @@ def test_validate_operation():
     }
     assert validate_operation(op_safe) == True
     
+    # Test dictionary target formatting
+    op_safe_dict = {
+        "risk_level": "safe",
+        "targets": [{"id": "test_id", "type": "directory", "path": "/tmp/safe_file.txt"}]
+    }
+    assert validate_operation(op_safe_dict) == True
+    
+    op_unsafe_dict = {
+        "risk_level": "safe",
+        "targets": [{"id": "test_id", "type": "file", "path": str(Path.home() / ".ssh" / "id_rsa")}]
+    }
+    with pytest.raises(PermissionError):
+        validate_operation(op_unsafe_dict)
+        
     op_unsafe_target = {
         "risk_level": "safe",
         "targets": ["/tmp/safe_file.txt", str(Path.home() / ".ssh" / "id_rsa")]

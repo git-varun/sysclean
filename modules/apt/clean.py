@@ -55,12 +55,12 @@ def execute():
     
     for t in targets:
         if t["id"] == "apt_cache":
-            if run_cmd(["sudo", "apt-get", "clean"]) == "":
+            if run_cmd(["apt-get", "clean"]) == "":
                 # Could be permission issue or success, assume success if no error raised
                 pass 
         elif t["id"] == "apt_autoremove":
             try:
-                subprocess.check_call(["sudo", "apt-get", "autoremove", "-y"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                subprocess.check_call(["apt-get", "autoremove", "-y"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             except subprocess.CalledProcessError as e:
                 status = "partial_failure"
                 errors.append(f"autoremove failed: {e}")

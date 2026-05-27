@@ -8,7 +8,9 @@ import {
   ShieldAlert, 
   TerminalSquare, 
   RefreshCw,
-  HardDrive
+  HardDrive,
+  Search,
+  Sparkles
 } from 'lucide-react';
 import './index.css';
 
@@ -48,15 +50,30 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
+  // Scan state
+  const [scanModalOpen, setScanModalOpen] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [enqueuing, setEnqueuing] = useState(false);
+  const [scanPlans, setScanPlans] = useState([]);
+
+  // AI state
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiData, setAiData] = useState(null);
+  const [aiTarget, setAiTarget] = useState('storage');
+
   const fetchData = async () => {
+    console.log(`[Frontend] Fetching data from backend API at ${new Date().toISOString()}...`);
     try {
       const [queueRes, activeRes, rollbacksRes, storageRes, healthRes] = await Promise.all([
-        axios.get(`${API_BASE}/queue`).catch(() => ({ data: [] })),
-        axios.get(`${API_BASE}/active`).catch(() => ({ data: [] })),
-        axios.get(`${API_BASE}/rollbacks`).catch(() => ({ data: [] })),
-        axios.get(`${API_BASE}/storage`).catch(() => ({ data: { reclaimable_bytes: 0 } })),
-        axios.get(`${API_BASE}/health`).catch(() => ({ data: { status: 'error' } }))
+        axios.get(`${API_BASE}/queue`).catch(err => { console.error("[Frontend] Error fetching queue:", err); return { data: [] }; }),
+        axios.get(`${API_BASE}/active`).catch(err => { console.error("[Frontend] Error fetching active executions:", err); return { data: [] }; }),
+        axios.get(`${API_BASE}/rollbacks`).catch(err => { console.error("[Frontend] Error fetching rollbacks:", err); return { data: [] }; }),
+        axios.get(`${API_BASE}/storage`).catch(err => { console.error("[Frontend] Error fetching storage:", err); return { data: { reclaimable_bytes: 0 } }; }),
+        axios.get(`${API_BASE}/health`).catch(err => { console.error("[Frontend] Error fetching health:", err); return { data: { status: 'error' } }; })
       ]);
+
+      console.debug(`[Frontend] Data received: Queue(${queueRes.data.length}), Active(${activeRes.data.length}), Rollbacks(${rollbacksRes.data.length})`);
 
       setQueue(queueRes.data);
       setActive(activeRes.data);
@@ -65,17 +82,75 @@ function App() {
       setHealth(healthRes.data);
       setLastUpdated(new Date());
     } catch (error) {
-      console.error("Failed to fetch data", error);
+      console.error("[Frontend] Critical failure during polling:", error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.info("[Frontend] App Component mounted, starting polling interval.");
     fetchData();
     const interval = setInterval(fetchData, 3000); // Poll every 3 seconds
-    return () => clearInterval(interval);
+    return () => {
+      console.info("[Frontend] App Component unmounting, clearing interval.");
+      clearInterval(interval);
+    };
   }, []);
+
+  const handleScanClick = async () => {
+    console.info("[Frontend] Scan System button clicked. Opening modal and fetching plans.");
+    setScanning(true);
+    setScanModalOpen(true);
+    setScanPlans([]);
+    try {
+      console.log("[Frontend] POST /api/scan/plan ...");
+      const res = await axios.post(`${API_BASE}/scan/plan`);
+      console.info(`[Frontend] Scan planning complete. Received ${res.data.plans?.length || 0} plans.`, res.data.plans);
+      setScanPlans(res.data.plans || []);
+    } catch (err) {
+      console.error("[Frontend] Failed to generate scan plans via API:", err);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleEnqueueClick = async () => {
+    console.info(`[Frontend] Approve & Enqueue clicked. Sending ${scanPlans.length} plans to daemon.`);
+    setEnqueuing(true);
+    try {
+      console.log("[Frontend] POST /api/scan/enqueue payload:", scanPlans);
+      await axios.post(`${API_BASE}/scan/enqueue`, { plans: scanPlans });
+      console.info("[Frontend] Enqueue successful. Closing modal and refreshing queue.");
+      setScanModalOpen(false);
+      fetchData(); // Refresh queue
+    } catch (err) {
+      console.error("[Frontend] Failed to enqueue plans:", err);
+      alert("Failed to enqueue plans");
+    } finally {
+      setEnqueuing(false);
+    }
+  };
+
+  const handleAiClick = () => {
+    setAiModalOpen(true);
+    setAiData(null);
+    fetchAiAdvice('storage');
+  };
+
+  const fetchAiAdvice = async (target) => {
+    setAiTarget(target);
+    setAiLoading(true);
+    setAiData(null);
+    try {
+      const res = await axios.get(`${API_BASE}/advise/${target}`);
+      setAiData(res.data.recommendation);
+    } catch (err) {
+      setAiData(`Error: ${err.response?.data?.detail || err.message}`);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   return (
     <div style={{ padding: '2rem', maxWidth: '1600px', margin: '0 auto' }}>
@@ -99,6 +174,46 @@ function App() {
           <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
             Last updated: {lastUpdated.toLocaleTimeString()}
           </span>
+          <button 
+            onClick={handleScanClick}
+            disabled={scanning || enqueuing}
+            style={{ 
+              background: 'var(--accent-primary)', 
+              border: 'none', 
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+              opacity: (scanning || enqueuing) ? 0.7 : 1
+            }}
+          >
+            <Search size={16} className={scanning ? "spin" : ""} />
+            Scan System
+          </button>
+          <button 
+            onClick={handleAiClick}
+            style={{ 
+              background: 'linear-gradient(135deg, #8b5cf6, #3b82f6)', 
+              border: 'none', 
+              color: '#fff',
+              padding: '0.5rem 1rem',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontWeight: 600,
+              transition: 'all 0.2s',
+            }}
+          >
+            <Sparkles size={16} />
+            Ask AI Advisory
+          </button>
           <button 
             onClick={fetchData}
             style={{ 
@@ -251,6 +366,160 @@ function App() {
         </div>
 
       </div>
+
+      {/* Scan Modal */}
+      {scanModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="glass-panel" style={{ width: '600px', maxWidth: '90%', padding: '2rem' }}>
+            <h2 style={{ marginTop: 0, marginBottom: '1.5rem' }}>System Scan Results</h2>
+            
+            {scanning ? (
+              <div style={{ textAlign: 'center', padding: '2rem 0', color: 'var(--text-secondary)' }}>
+                <Search size={48} className="spin" style={{ marginBottom: '1rem' }} />
+                <p>Analyzing system components...</p>
+              </div>
+            ) : (
+              <div>
+                {scanPlans.length === 0 ? (
+                  <p style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '2rem 0' }}>
+                    No actionable cleanups found.
+                  </p>
+                ) : (
+                  <div>
+                    <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
+                      The following cleanup plans were generated:
+                    </p>
+                    <div style={{ background: 'var(--bg-secondary)', borderRadius: '8px', padding: '1rem', marginBottom: '1.5rem' }}>
+                      {scanPlans.map((plan, i) => (
+                        <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem 0', borderBottom: i < scanPlans.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <span style={{ fontWeight: 600 }}>{plan.module}</span>
+                            <span className={`badge ${getRiskBadge(plan.risk_level)}`}>{plan.risk_level}</span>
+                          </div>
+                          <span style={{ color: '#38bdf8' }}>{formatBytes(plan.estimated_bytes || 0)}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                      <span style={{ fontWeight: 'bold' }}>Total Estimated Savings:</span>
+                      <span style={{ fontSize: '1.25rem', color: '#38bdf8', fontWeight: 'bold' }}>
+                        {formatBytes(scanPlans.reduce((acc, p) => acc + (p.estimated_bytes || 0), 0))}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                  <button 
+                    onClick={() => setScanModalOpen(false)}
+                    disabled={enqueuing}
+                    style={{ 
+                      background: 'transparent', 
+                      border: '1px solid var(--glass-border)', 
+                      color: 'var(--text-primary)',
+                      padding: '0.5rem 1rem',
+                      borderRadius: '8px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  {scanPlans.length > 0 && (
+                    <button 
+                      onClick={handleEnqueueClick}
+                      disabled={enqueuing}
+                      style={{ 
+                        background: 'var(--status-warning)', 
+                        border: 'none', 
+                        color: '#000',
+                        fontWeight: 'bold',
+                        padding: '0.5rem 1.5rem',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem'
+                      }}
+                    >
+                      {enqueuing ? <RefreshCw size={16} className="spin" /> : null}
+                      Approve & Enqueue
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* AI Advisory Modal */}
+      {aiModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(0,0,0,0.7)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div className="glass-panel" style={{ width: '800px', maxWidth: '90%', padding: '2rem', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Sparkles size={24} color="#8b5cf6" />
+                <h2 style={{ margin: 0 }}>AI Advisory Engine</h2>
+              </div>
+              <button 
+                onClick={() => setAiModalOpen(false)}
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}
+              >&times;</button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+              {['storage', 'docker', 'apt'].map(t => (
+                <button
+                  key={t}
+                  onClick={() => fetchAiAdvice(t)}
+                  style={{
+                    background: aiTarget === t ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    border: `1px solid ${aiTarget === t ? '#8b5cf6' : 'var(--glass-border)'}`,
+                    color: aiTarget === t ? '#8b5cf6' : 'var(--text-primary)',
+                    padding: '0.5rem 1rem',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    textTransform: 'capitalize'
+                  }}
+                >
+                  {t === 'storage' ? 'Queue Analysis' : t}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', background: 'var(--bg-secondary)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--glass-border)' }}>
+              {aiLoading ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--text-secondary)' }}>
+                  <RefreshCw size={32} className="spin" style={{ marginBottom: '1rem' }} />
+                  <p>Consulting AI Models...</p>
+                </div>
+              ) : (
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'inherit', color: 'var(--text-primary)', lineHeight: 1.5 }}>
+                  {aiData || "No data received."}
+                </pre>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

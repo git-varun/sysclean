@@ -2,5 +2,6 @@
 
 shellcheck \
   bin/sysclean \
-  lib/*.sh \
-  modules/*.sh
+  install.sh \
+  uninstall.sh \
+  packaging/*.sh

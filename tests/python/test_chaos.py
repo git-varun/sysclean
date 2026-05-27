@@ -17,26 +17,16 @@ from core.engine import register_rollback, create_snapshot
 # Setup test DB safely for concurrent tests
 @pytest.fixture(autouse=True)
 def setup_db():
-    # If the DB is locked by an interrupted test, removing it ensures a clean slate
-    if DB_PATH.exists():
-        from queue_engine.db import engine
-        engine.dispose()
-        try:
-            os.remove(DB_PATH)
-        except OSError:
-            pass
     from queue_engine.db import engine
-    # Create all tables using the pre-configured engine
-    Base.metadata.create_all(engine)
+    from queue_engine.models import Base
     
+    Base.metadata.create_all(bind=engine)
+    
+    with engine.begin() as conn:
+        for table in reversed(Base.metadata.sorted_tables):
+            conn.execute(table.delete())
+            
     yield
-    if DB_PATH.exists():
-        from queue_engine.db import engine
-        engine.dispose()
-        try:
-            os.remove(DB_PATH)
-        except OSError:
-            pass
 
 def _concurrent_worker(worker_id):
     """Worker function for concurrent queue access test."""
@@ -125,7 +115,8 @@ def test_stale_task_recovery():
     db = SessionLocal()
     task = db.query(QueueTask).filter(QueueTask.operation_id == op_id).first()
     # Mock timestamp to 45 minutes ago
-    task.updated_at = datetime.utcnow() - timedelta(minutes=45)
+    from datetime import timezone
+    task.updated_at = datetime.now(timezone.utc) - timedelta(minutes=45)
     db.commit()
     db.close()
     
