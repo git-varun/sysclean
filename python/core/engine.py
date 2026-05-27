@@ -45,6 +45,8 @@ def create_snapshot(operation_id: str, targets: list) -> dict:
     
     # We use tar to compress absolute paths (removing leading slash via -P or similar, we'll use -P to keep absolute paths for restore)
     tar_cmd = ["tar", "-czPf", str(archive_path)] + existing_targets
+    if os.geteuid() != 0 and "PYTEST_CURRENT_TEST" not in os.environ:
+        tar_cmd = ["pkexec"] + tar_cmd
     subprocess.run(tar_cmd, check=True, capture_output=True)
     
     # Calculate sha256 hash
@@ -126,8 +128,23 @@ def execute_rollback(rollback_id=None):
                     
                 print(f"Restoring snapshot from {archive_path}")
                 # Restore using tar. -P to extract absolute paths back to their exact original location.
-                subprocess.run(["tar", "-xzPf", archive_path], check=True)
+                tar_cmd = ["tar", "-xzPf", archive_path]
+                if os.geteuid() != 0 and "PYTEST_CURRENT_TEST" not in os.environ:
+                    tar_cmd = ["pkexec"] + tar_cmd
+                subprocess.run(tar_cmd, check=True)
                 print(f"Rollback {rb_id} completed successfully.")
+            elif rb_type == "command":
+                cmd = payload.get("command")
+                if cmd:
+                    if not isinstance(cmd, list):
+                        cmd = [cmd]
+                    if os.geteuid() != 0 and cmd[0] != "pkexec" and "PYTEST_CURRENT_TEST" not in os.environ:
+                        cmd = ["pkexec"] + cmd
+                    print(f"Executing rollback command: {' '.join(cmd)}")
+                    subprocess.run(cmd, check=True)
+                    print(f"Rollback {rb_id} completed successfully.")
+                else:
+                    print(f"Error: Empty command in rollback payload: {payload}")
             else:
                 print(f"Rollback payload: {payload}")
                 print(f"Rollback {rb_id} completed successfully.")

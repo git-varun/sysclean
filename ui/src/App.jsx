@@ -10,7 +10,8 @@ import {
   RefreshCw,
   HardDrive,
   Search,
-  Sparkles
+  Sparkles,
+  RotateCcw
 } from 'lucide-react';
 import './index.css';
 
@@ -61,6 +62,23 @@ function App() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiData, setAiData] = useState(null);
   const [aiTarget, setAiTarget] = useState('storage');
+  const [rollingBack, setRollingBack] = useState(null);
+
+  const handleRollback = async (rollbackId) => {
+    if (window.confirm(`Are you sure you want to trigger this rollback? This will restore files or packages altered by the original operation.`)) {
+      setRollingBack(rollbackId);
+      try {
+        await axios.post(`${API_BASE}/rollback/${rollbackId}`);
+        await fetchData();
+        alert('Rollback executed successfully!');
+      } catch (err) {
+        console.error("Error executing rollback:", err);
+        alert(`Failed to execute rollback: ${err.response?.data?.detail || err.message}`);
+      } finally {
+        setRollingBack(null);
+      }
+    }
+  };
 
   const fetchData = async () => {
     console.log(`[Frontend] Fetching data from backend API at ${new Date().toISOString()}...`);
@@ -347,17 +365,54 @@ function App() {
                   <th>Module</th>
                   <th>Type</th>
                   <th>Date</th>
+                  <th style={{ textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {rollbacks.length === 0 ? (
-                  <tr><td colSpan="4" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No rollback history</td></tr>
+                  <tr><td colSpan="5" style={{ textAlign: 'center', color: 'var(--text-secondary)' }}>No rollback history</td></tr>
                 ) : rollbacks.map((item, i) => (
                   <tr key={i}>
                     <td style={{ fontFamily: 'monospace', color: 'var(--text-secondary)' }}>{(item.id || '').substring(0, 8)}</td>
                     <td style={{ fontWeight: 500 }}>{item.module}</td>
-                    <td>{item.type}</td>
+                    <td><span className="badge badge-info">{item.type}</span></td>
                     <td style={{ color: 'var(--text-secondary)', fontSize: '0.8rem' }}>{new Date(item.date).toLocaleString()}</td>
+                    <td style={{ textAlign: 'right' }}>
+                      <button
+                        onClick={() => handleRollback(item.id)}
+                        disabled={rollingBack !== null}
+                        style={{
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          border: '1px solid rgba(245, 158, 11, 0.3)',
+                          color: '#f59e0b',
+                          padding: '0.25rem 0.75rem',
+                          borderRadius: '6px',
+                          cursor: (rollingBack !== null) ? 'not-allowed' : 'pointer',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          transition: 'all 0.2s',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.25rem',
+                          opacity: (rollingBack !== null) ? 0.5 : 1
+                        }}
+                        onMouseEnter={(e) => {
+                          if (rollingBack === null) {
+                            e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)';
+                            e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.5)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (rollingBack === null) {
+                            e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)';
+                            e.currentTarget.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+                          }
+                        }}
+                      >
+                        <RotateCcw size={12} className={rollingBack === item.id ? "spin" : ""} />
+                        {rollingBack === item.id ? 'Reverting...' : 'Rollback'}
+                      </button>
+                    </td>
                   </tr>
                 ))}
               </tbody>

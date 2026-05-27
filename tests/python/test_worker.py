@@ -39,8 +39,9 @@ def test_queue_processor(mock_execute, mock_transition, mock_recover, mock_sessi
     
     mock_transition.assert_any_call("op1", "APPROVED", "PROPOSED")
     mock_transition.assert_any_call("op1", "EXECUTING", "APPROVED")
-    mock_execute.assert_called_once_with({"command": ["echo"]})
-    mock_transition.assert_any_call("op1", "COMPLETED", "EXECUTING")
+    mock_execute.assert_called_once_with({"command": ["echo"], "id": "op1"})
+    mock_transition.assert_any_call("op1", "VERIFYING", "EXECUTING")
+    mock_transition.assert_any_call("op1", "COMPLETED", "VERIFYING")
 
 @patch('core.worker.os.remove')
 @patch('core.worker.os.chmod')

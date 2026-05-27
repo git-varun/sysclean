@@ -107,3 +107,15 @@ def test_snapshot_rollback_integrity_dict_targets(tmp_path):
     execute_rollback()
     
     assert test_file.read_text() == "hello world dict"
+
+def test_rollback_api_endpoint():
+    from fastapi.testclient import TestClient
+    from web.server import app
+    from unittest.mock import patch
+    
+    client = TestClient(app)
+    with patch("core.engine.execute_rollback") as mock_execute:
+        response = client.post("/api/rollback/rb_test_123")
+        assert response.status_code == 200
+        assert response.json() == {"status": "success", "message": "Rollback rb_test_123 executed successfully"}
+        mock_execute.assert_called_once_with("rb_test_123")

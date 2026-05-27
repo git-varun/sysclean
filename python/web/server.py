@@ -228,6 +228,19 @@ def scan_enqueue(request: EnqueueRequest):
     logger.info("Enqueue phase completed successfully")
     return {"status": "success", "enqueued": len(request.plans)}
 
+@app.post("/api/rollback/{rollback_id}")
+def trigger_rollback(rollback_id: str):
+    """Trigger rollback for a specific rollback ID."""
+    logger.info(f"Received request to execute rollback: {rollback_id}")
+    try:
+        from core.engine import execute_rollback
+        execute_rollback(rollback_id)
+        logger.info(f"Rollback {rollback_id} executed successfully")
+        return {"status": "success", "message": f"Rollback {rollback_id} executed successfully"}
+    except Exception as e:
+        logger.error(f"Failed to execute rollback {rollback_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Mount Static Files (React Build)
 # We calculate the path dynamically from this file's location to the project root/ui/dist
 current_dir = pathlib.Path(__file__).parent.resolve()

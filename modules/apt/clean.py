@@ -36,12 +36,20 @@ def plan():
         targets.append({"id": "apt_autoremove", "type": "packages", "items": packages, "size_bytes": 0})
         
     script_path = str(pathlib.Path(__file__).resolve())
-    return {
+    res = {
         "module": "apt",
         "targets": targets,
         "command": [sys.executable, script_path, "--execute"],
         "estimated_bytes": total_size
     }
+    if packages:
+        res["rollback"] = {
+            "type": "command",
+            "payload": {
+                "command": ["apt-get", "install", "-y"] + packages
+            }
+        }
+    return res
 
 def execute():
     try:

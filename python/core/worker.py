@@ -53,9 +53,14 @@ class QueueProcessor(threading.Thread):
                             continue
 
                     try:
+                        if isinstance(payload, dict):
+                            payload["id"] = op_id
                         execute_operation(payload)
-                        transition_state(op_id, "COMPLETED", "EXECUTING")
-                    except Exception:  # pylint: disable=broad-exception-caught
+                        transition_state(op_id, "VERIFYING", "EXECUTING")
+                        transition_state(op_id, "COMPLETED", "VERIFYING")
+                    except Exception as exc:  # pylint: disable=broad-exception-caught
+                        import traceback
+                        logger.error(f"Failed to execute task {op_id}: {exc}\n{traceback.format_exc()}")
                         transition_state(op_id, "FAILED", "EXECUTING")
                 else:
                     db.close()
