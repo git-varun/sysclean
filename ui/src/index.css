@@ -141,3 +141,148 @@ tr:hover td {
 .glow-effect {
   animation: pulse-glow 3s infinite;
 }
+
+/* Service Badges styling */
+.service-badge {
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  text-transform: capitalize;
+  display: inline-block;
+}
+.service-badge-npm { background: linear-gradient(135deg, #cb3837, #fb3e3d); }
+.service-badge-pip { background: linear-gradient(135deg, #3776ab, #dfb123); color: #000; }
+.service-badge-apt, .service-badge-dpkg { background: linear-gradient(135deg, #e95420, #f86f3c); }
+.service-badge-syslog, .service-badge-journal { background: linear-gradient(135deg, #2b5c8f, #4d8cc9); }
+.service-badge-kernel { background: linear-gradient(135deg, #3f4a3c, #6c8067); }
+.service-badge-docker { background: linear-gradient(135deg, #2496ed, #5ab4f2); }
+.service-badge-snap { background: linear-gradient(135deg, #e5a900, #ffc93c); color: #000; }
+.service-badge-generic { background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+
+/* Navigation Tab Buttons */
+.tab-button {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  padding: 0.5rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tab-button:hover {
+  background: var(--glass-highlight);
+  color: var(--text-primary);
+}
+.tab-button.active {
+  background: var(--accent-gradient);
+  border-color: transparent;
+  color: #fff;
+}
+
+/* Docker Sub Tabs */
+.sub-tab-button {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+.sub-tab-button:hover {
+  color: var(--text-primary);
+}
+.sub-tab-button.active {
+  color: var(--accent-secondary);
+  border-bottom-color: var(--accent-secondary);
+}
+
+/* Console Log Box */
+.console-log-box {
+  background: #05070a;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  color: #a7f3d0;
+  padding: 1rem;
+  height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Accordion Component */
+.accordion-item {
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  margin-bottom: 0.75rem;
+  background: rgba(255, 255, 255, 0.01);
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.accordion-item:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+.accordion-header {
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  background: rgba(255, 255, 255, 0.02);
+}
+.accordion-body {
+  border-top: 1px solid var(--glass-border);
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+/* Search and Inputs */
+.styled-input {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.styled-input:focus {
+  border-color: var(--accent-primary);
+}
+
+/* Live Pulse Dot */
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--status-success);
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  animation: pulse-dot-key 1.5s infinite;
+  display: inline-block;
+}
+@keyframes pulse-dot-key {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
