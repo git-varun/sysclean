@@ -43,7 +43,7 @@ SysClean employs deep safety mechanisms to prevent catastrophic errors (whether 
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/your-org/sysclean.git
+git clone https://github.com/git-varun/sysclean.git
 cd sysclean
 
 # 2. Setup the environment and build the package
@@ -94,3 +94,8 @@ For deeper dives into the architecture and planning, please refer to the `docs/`
 - `docs/PLAN.md`: Step-by-step implementation plan.
 - `docs/AUDIT_REPORT.md`: Security and architecture audit.
 - `GEMINI.md`: Core system conventions and guidelines.
+
+<!-- LICENSE -->
+## 📜 License
+
+SysClean is licensed under the [MIT License](LICENSE).

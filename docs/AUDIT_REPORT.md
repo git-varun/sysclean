@@ -1,5 +1,20 @@
 # Architectural and Implementation Audit Report: SysClean
 
+> **Note (2026-07-23):** This report describes an early bash/scaffolding
+> version of SysClean (`lib/*.sh`, `python/telemetry/`, `python/rollback/`,
+> `python/tui/`, `python/reporting/`, `python/executor/`) that has since been
+> replaced by the Python-based runtime under `python/core/`,
+> `python/queue_engine/`, `python/ai/`, `python/security/`, and `python/web/`.
+> The specific findings below (the `shell=True` command injection, the
+> Jinja2 autoescape XSS, and the missing `requests` timeouts) do not apply to
+> the current codebase — those call sites no longer exist or already pass
+> `timeout=`. The Pylint score and test-coverage figures are also from that
+> earlier snapshot and have not been re-measured since.
+>
+> This document is kept for historical context. A fresh audit against the
+> current codebase is needed before treating any of the findings below as
+> current.
+
 ## 1. Executive Summary
 The SysClean project is currently in an early **scaffolding and blueprint phase**. While the conceptual architecture and directory structure closely align with the Product Requirements Document (PRD), the actual implementations are largely superficial placeholders. The project is far from production readiness and requires significant implementation effort to fulfill the vision outlined in the PRD. A recent automated static analysis and security audit further confirms that the code quality does not meet production standards, achieving a Pylint score of 3.23/10 and uncovering several critical security vulnerabilities.
 
